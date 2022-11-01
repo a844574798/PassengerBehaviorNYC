@@ -23,7 +23,7 @@
 <meta name="author" content="Yinqi Wang, Yuyang Zhuo, Jiahao Lai" />
 
 
-<meta name="date" content="2022-10-29" />
+<meta name="date" content="2022-10-31" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -76,7 +76,14 @@
 <li class="chapter" data-level="2" data-path="proposal.html"><a href="proposal.html"><i class="fa fa-check"></i><b>2</b> Proposal</a>
 <ul>
 <li class="chapter" data-level="2.1" data-path="proposal.html"><a href="proposal.html#research-topic"><i class="fa fa-check"></i><b>2.1</b> Research topic</a></li>
-<li class="chapter" data-level="2.2" data-path="proposal.html"><a href="proposal.html#data-availability"><i class="fa fa-check"></i><b>2.2</b> Data availability</a></li>
+<li class="chapter" data-level="2.2" data-path="proposal.html"><a href="proposal.html#data-availability"><i class="fa fa-check"></i><b>2.2</b> Data availability</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="proposal.html"><a href="proposal.html#data-source"><i class="fa fa-check"></i><b>2.2.1</b> Data Source</a></li>
+<li class="chapter" data-level="2.2.2" data-path="proposal.html"><a href="proposal.html#frequency-of-updates"><i class="fa fa-check"></i><b>2.2.2</b> Frequency of Updates</a></li>
+<li class="chapter" data-level="2.2.3" data-path="proposal.html"><a href="proposal.html#format-of-data"><i class="fa fa-check"></i><b>2.2.3</b> Format of Data</a></li>
+<li class="chapter" data-level="2.2.4" data-path="proposal.html"><a href="proposal.html#import-data"><i class="fa fa-check"></i><b>2.2.4</b> Import Data</a></li>
+<li class="chapter" data-level="2.2.5" data-path="proposal.html"><a href="proposal.html#data-source-links"><i class="fa fa-check"></i><b>2.2.5</b> Data Source Links</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="data.html"><a href="data.html"><i class="fa fa-check"></i><b>3</b> Data</a>
 <ul>
@@ -110,10 +117,74 @@
 <h1><span class="header-section-number">Chapter 2</span> Proposal<a href="proposal.html#proposal" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="research-topic" class="section level2 hasAnchor" number="2.1">
 <h2><span class="header-section-number">2.1</span> Research topic<a href="proposal.html#research-topic" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>In this project, we are going to conduct a research on the trip records of yellow-cab taxi and for-hire vehicles in New York City using the data collected by the NYC Taxi &amp; Limousine Commission. With the help of cross-examining the datasets and doing analysis, our team’s goals are to generate meaningful visualizations, discover and deliver profound and useful insights. Our two main research directions are the passengers’ behaviors and the stories behind them (their communities, reasons to travel, etc.) The project will be separated into several research questions including but not limited to:</p>
+<ul>
+<li>What time of the day has the highest demand?</li>
+<li>Which areas are popular destinations on weekends?</li>
+<li>What is the most likely time period for a long distance ride?</li>
+<li>Do areas with high yellow-cab ride numbers also have high for-hire vehicle ride numbers?</li>
+<li>What are the areas that give a high tip amount (larger than 10%)?</li>
+<li>Which type of ride do the citizens like to take to the airport?</li>
+</ul>
+<p>Through our extensive data analysis and visualizations, we hope to effectively deliver our insights to our audience regarding passengers’ behaviors and different communities/regions in NYC.</p>
 </div>
 <div id="data-availability" class="section level2 hasAnchor" number="2.2">
 <h2><span class="header-section-number">2.2</span> Data availability<a href="proposal.html#data-availability" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="data-source" class="section level3 hasAnchor" number="2.2.1">
+<h3><span class="header-section-number">2.2.1</span> Data Source<a href="proposal.html#data-source" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>To analyze passenger behaviors , we use trip records data from The New York City Taxi and Limousine Commision (TLC), the agency of licensing and regulating taxi and for-hire vehicles (FHV). In collaboration with authorized technology providers, TLC collects comprehensive data including trip records, drivers related data, active/inactive vehicle data, etc. Since this project aims to analyze passengers behavior, we would mainly focus on the trip records dataset.</p>
+<p>Trip records data can be divided into two categories: yellow and green taxi trip records, and for-hire vehicle (FHV) trip records.</p>
+<ul>
+<li><p>Yellow taxis are the only vehicles permitted by TLC to respond to street hail in all five boroughs in NYC. Green taxis are allowed to provide prearranged service and respond to street hails only in the area of northern Manhattan (above E 96th St and W 110th St) and in the outer boroughs. For yellow and green taxi trip records data, TLC collects them from technology providers authorized under the Taxicab &amp; Livery Passenger Enhancement Programs (TPEP/LPEP). TLC cannot guarantee the accuracy of these data.</p></li>
+<li><p>For-hire vehicle (FHV) trip records include data from community livery bases, luxury limousine bases, black car bases and high-volume for-hire vehicle bases (bases for companies, like Uber and Lyft, dispatching over 10,000 trips per day). FHV trip records are generated from FHV Trip Record submissions made by TLC-licensed bases. TLC cannot guarantee the accuracy and completeness of trip records submitted by bases. However, TLC examines these records and appropriately takes actions to make records data as complete and accurate as possible.</p></li>
+</ul>
+<p>TLC publishes four separate trip records datasets per month: “yellow taxi trip records”, “green taxi trip records”, “for-hire vehicle trip records” and “high-volume for-hire vehicle trip records”. In this project, we temporarily choose three datasets: the trip records of yellow taxi, green taxi and high-volume FHV. For the reason that the “for-hire vehicle trip records” dataset only has 7 columns whereas others have about 20 columns, we hold the opinion that this dataset lacks information and decide to abandon this dataset.</p>
+<p>In consideration of the similarity between yellow taxi and green taxi, as well as the relatively small size of green taxi data, we may combine the trip records data of these two types of taxi together as a big dataset called “yellow/green taxi trip records”</p>
+<p>The timeframe of trip records data will be one quarter (three months). So far, the latest dataset provided by TLC is the trip records data of June 2022. Hence we choose the data of April, May and June as 2022-Q2 trip records data.</p>
+<p>Since trip records also contain simple geographical location information, such as Taxi Zone, to record starting area and destination area of a trip, we need a Taxi Zone Lookup Table, provided by TLC, as the ancillary data.</p>
+</div>
+<div id="frequency-of-updates" class="section level3 hasAnchor" number="2.2.2">
+<h3><span class="header-section-number">2.2.2</span> Frequency of Updates<a href="proposal.html#frequency-of-updates" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>TLC will publish trip records data monthly, with two months delay.</p>
+</div>
+<div id="format-of-data" class="section level3 hasAnchor" number="2.2.3">
+<h3><span class="header-section-number">2.2.3</span> Format of Data<a href="proposal.html#format-of-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The trip records dataset files retrieved from TLC official website are stored in PARQUET format.</p>
+<p>In each trip records dataset, one row represents a single trip made by a TLC-licensed vehicle, recording the information of pick-up and drop-off locations and dates, trip distance, trip fare amount, tip amount and other useful information.</p>
+<p>The Taxi Zone Lookup Table is stored in CSV format. It linked pick-up and drop-off location id with the geographic location.</p>
+</div>
+<div id="import-data" class="section level3 hasAnchor" number="2.2.4">
+<h3><span class="header-section-number">2.2.4</span> Import Data<a href="proposal.html#import-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Since our trip records datasets are provided in Parquet files, we use read_parquet() from the arrow package in R to load data.</p>
+<p>For the Taxi Zone Lookup Table, we use read_csv() from readr package to load Taxi Zone data and join it with trip records data to retrieve location information.</p>
+</div>
+<div id="data-source-links" class="section level3 hasAnchor" number="2.2.5">
+<h3><span class="header-section-number">2.2.5</span> Data Source Links<a href="proposal.html#data-source-links" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>TLC Trip Record Data Website:<br />
+<a href="https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page">https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page</a></p>
+<p>Yellow Taxi Trip Records:</p>
+<ul>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-06.parquet">2022 June</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-05.parquet">2022 May</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-04.parquet">2022 April</a></li>
+</ul>
+<p>Green Taxi Trip Records:</p>
+<ul>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-06.parquet">2022 June</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-05.parquet">2022 May</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-04.parquet">2022 April</a></li>
+</ul>
+<p>High Volume For-Hire Vehicle Trip Records:</p>
+<ul>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-06.parquet">2022 June</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-05.parquet">2022 May</a></li>
+<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-04.parquet">2022 April</a></li>
+</ul>
+<p>Taxi Zone Lookup Table:<br />
+<a href="https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv">https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv</a></p>
+<p>We will email to <a href="mailto:research@tlc.nyc.gov" class="email">research@tlc.nyc.gov</a> if we have questions or need more information about data.</p>
 
+</div>
 </div>
 </div>
             </section>
