@@ -4,8 +4,9 @@ This project project is created by Yinqi Wang, Yuyang Zhuo, and Jiahao Lai from 
 
 In this project, our group conducted analysis on two dataset:  
   
-1. The trip data of New York City's Yellow Cab Taxi during June 2022.
-2. The trip data of High Volume For-Hire Vehicle during June 2022.
+1. The trip data of New York City's Yellow Cab Taxi from April 2022 to June 2022.
+2. The trip data of New York City's Yellow Cab Taxi from April 2022 to June 2022.
+3. The trip data of High Volume For-Hire Vehicle from April 2022 to June 2022.
 
 We examine, clean, and utilize these datasets to analyze the behavior of NYC passengers on traveling habits, schedules, and destinations. We also answers questions such as "Does the for-hire vehicle passengers gives more tip than the yellow cab passengers?" We investigated research questions that fits our interests, wrote analysis, and accompanied our analysis with different visualizations.
 
