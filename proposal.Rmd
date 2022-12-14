@@ -8,8 +8,9 @@ In this project, we are going to conduct a research on the trip records of yello
 - Which areas are popular destinations on weekends? 
 - What is the most likely time period for a long distance ride?
 - Do areas with high yellow-cab ride numbers also have high for-hire vehicle ride numbers?
-- What are the areas that give a high tip amount (larger than 10%)?
-- Which type of ride do the citizens like to take to the airport? 
+- What are the areas that give a high tip amount (between 30% and 50%)?
+- For each type of vehicle, which airport do their passengers usually prefer to go to?  
+- For those passengers who arrived at the airports, what type of vehicle they preferred to take?
   
 Through our extensive data analysis and visualizations, we hope to effectively deliver our insights to our audience regarding passengers’ behaviors and different communities/regions in NYC.  
 
@@ -29,7 +30,7 @@ TLC publishes four separate trip records datasets per month: “yellow taxi trip
 
 In consideration of the similarity between yellow taxi and green taxi, as well as the relatively small size of green taxi data, we may combine the trip records data of these two types of taxi together as a big dataset called “yellow/green taxi trip records”  
 
-The timeframe of trip records data will be one quarter (three months). So far, the latest dataset provided by TLC is the trip records data of June 2022. Hence we choose the data of April, May and June as 2022-Q2 trip records data.  
+The timeframe of trip records data will be one month. So far, the latest dataset provided by TLC is the trip records data of June 2022.  
 
 Since trip records also contain simple geographical location information, such as Taxi Zone, to record starting area and destination area of a trip, we need a Taxi Zone Lookup Table, provided by TLC, as the ancillary data.  
 
@@ -59,20 +60,14 @@ TLC Trip Record Data Website:
 Yellow Taxi Trip Records:  
   
 - [2022 June](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-06.parquet)
-- [2022 May](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-05.parquet)
-- [2022 April](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-04.parquet)
   
 Green Taxi Trip Records:  
   
 - [2022 June](https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-06.parquet)
-- [2022 May](https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-05.parquet)
-- [2022 April](https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-04.parquet)
   
 High Volume For-Hire Vehicle Trip Records:  
   
 - [2022 June](https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-06.parquet)
-- [2022 May](https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-05.parquet)
-- [2022 April](https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-04.parquet)
   
 Taxi Zone Lookup Table:  
 [https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv](https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv)

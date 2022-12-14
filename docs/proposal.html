@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Chapter 2 Proposal | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis</title>
   <meta name="description" content="Chapter 2 Proposal | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis" />
-  <meta name="generator" content="bookdown 0.29 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.30 and GitBook 2.6.7" />
 
   <meta property="og:title" content="Chapter 2 Proposal | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis" />
   <meta property="og:type" content="book" />
@@ -23,7 +23,7 @@
 <meta name="author" content="Yinqi Wang, Yuyang Zhuo, Jiahao Lai" />
 
 
-<meta name="date" content="2022-10-31" />
+<meta name="date" content="2022-12-14" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -123,8 +123,10 @@
 <li>Which areas are popular destinations on weekends?</li>
 <li>What is the most likely time period for a long distance ride?</li>
 <li>Do areas with high yellow-cab ride numbers also have high for-hire vehicle ride numbers?</li>
-<li>What are the areas that give a high tip amount (larger than 10%)?</li>
-<li>Which type of ride do the citizens like to take to the airport?</li>
+<li>What are the areas that give a high tip amount (between 30% and 50%)?</li>
+<li>For each type of vehicle, which airport do their passengers usually prefer to go to?<br />
+</li>
+<li>For those passengers who arrived at the airports, what type of vehicle they preferred to take?</li>
 </ul>
 <p>Through our extensive data analysis and visualizations, we hope to effectively deliver our insights to our audience regarding passengers’ behaviors and different communities/regions in NYC.</p>
 </div>
@@ -140,7 +142,7 @@
 </ul>
 <p>TLC publishes four separate trip records datasets per month: “yellow taxi trip records”, “green taxi trip records”, “for-hire vehicle trip records” and “high-volume for-hire vehicle trip records”. In this project, we temporarily choose three datasets: the trip records of yellow taxi, green taxi and high-volume FHV. For the reason that the “for-hire vehicle trip records” dataset only has 7 columns whereas others have about 20 columns, we hold the opinion that this dataset lacks information and decide to abandon this dataset.</p>
 <p>In consideration of the similarity between yellow taxi and green taxi, as well as the relatively small size of green taxi data, we may combine the trip records data of these two types of taxi together as a big dataset called “yellow/green taxi trip records”</p>
-<p>The timeframe of trip records data will be one quarter (three months). So far, the latest dataset provided by TLC is the trip records data of June 2022. Hence we choose the data of April, May and June as 2022-Q2 trip records data.</p>
+<p>The timeframe of trip records data will be one month. So far, the latest dataset provided by TLC is the trip records data of June 2022.</p>
 <p>Since trip records also contain simple geographical location information, such as Taxi Zone, to record starting area and destination area of a trip, we need a Taxi Zone Lookup Table, provided by TLC, as the ancillary data.</p>
 </div>
 <div id="frequency-of-updates" class="section level3 hasAnchor" number="2.2.2">
@@ -165,20 +167,14 @@
 <p>Yellow Taxi Trip Records:</p>
 <ul>
 <li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-06.parquet">2022 June</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-05.parquet">2022 May</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-04.parquet">2022 April</a></li>
 </ul>
 <p>Green Taxi Trip Records:</p>
 <ul>
 <li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-06.parquet">2022 June</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-05.parquet">2022 May</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-04.parquet">2022 April</a></li>
 </ul>
 <p>High Volume For-Hire Vehicle Trip Records:</p>
 <ul>
 <li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-06.parquet">2022 June</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-05.parquet">2022 May</a></li>
-<li><a href="https://d37ci6vzurychx.cloudfront.net/trip-data/fhvhv_tripdata_2022-04.parquet">2022 April</a></li>
 </ul>
 <p>Taxi Zone Lookup Table:<br />
 <a href="https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv">https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv</a></p>

@@ -2,22 +2,23 @@
 
 ## Sources
   
-The Taxi & Limousine Commission(TLC) of New York City is responsible for collecting the data. The data is collected by the technology providers authorized by TLC under the Taxicab & Livery Passenger Enhancement Programs (TPEP/LPEP). In terms of the options, we can download the monthly trip data for yellow taxi cabs, green taxi cabs, and for-hire vehicles. We decided to use data from all types of vehicles because it would be more helpful for us to learn about the transportation status of NYC from more aspects. We also decided to download the data of April, May, and June, which is a three-month span. This is because it would be the length of a quarter.  
+The Taxi & Limousine Commission(TLC) of New York City is responsible for collecting the data. The data is collected by the technology providers authorized by TLC under the Taxicab & Livery Passenger Enhancement Programs (TPEP/LPEP). In terms of the options, we can download the monthly trip data for yellow taxi cabs, green taxi cabs, and for-hire vehicles. We decided to use data from all types of vehicles because it would be more helpful for us to learn about the transportation status of NYC from more aspects. We also decided to download the data of June, which was the latest available data at that time.  
   
-Some basic information of the data are:
-1. There are 9 datasets in total, 3 for April, 3 for May, and 3 for June. For each month, we have one dataset for each vehicle type. 
-2. In total, there are over 200,000 observations for green taxi trips, over 10,000,000 observations for yellow taxi trips, and over 50,000,000 for for-hire vehicle trips. Overall, we have over 60 million records.
-3. For the yellow and green taxi cab trip data, some important variables are:
+Some basic information of the data are:  
+  
+1. There are 3 datasets in total, one for yellow taxi cab, one for green taxi cab, and one for for-hire vehicles. 
+2. In total, there are over 200,000 observations for green taxi trips, over 10,000,000 observations for yellow taxi trips, and over 20,000,000 for for-hire vehicle trips. Overall, we have over 30 million records.
+3. For the yellow and green taxi cab trip data, some important variables are:  
     + tpep_pickup_datetime: The pickup time (when the meter was engaged).
     + tpep_dropoff_datetime: The dropoff time (when the meter was disengaged).
     + Passenger_count: Number of passengers in the trip.
     + Trip_distance: Trip distance, in miles.
     + PULocationID/DOLocationID: TLC Taxi Zone when pickup/TLC Taxi Zone when dropoff.
-    + RateCodeID: The rate code at the end of the trip. This helps us identify whether the vehicle went to the airport or not.
-    + Tip_amount: The amount of tip the passenger paid.
+    + RateCodeID: The rate code at the end of the trip. This helps us identify whether the vehicle went to the airport or not.  
+    + Tip_amount: The amount of tip the passenger paid.  
     + Total_amount: The total amount charged to the passenger. 
-    + congestion_charge: The charge of passing through NYC congestion zone.
-4. For the for-hire vehicle trip data, some important variables are:
+    + congestion_charge: The charge of passing through NYC congestion zone.  
+4. For the for-hire vehicle trip data, some important variables are:  
     + pickup_datetime/dropoff_datetime: The date and time of the trip pickup/dropoff
     + PULocationID/DOLocationID: TLC Taxi zone where the trip begins/ends.
     + trip_miles: The trip distance in miles.
@@ -27,14 +28,13 @@ Some basic information of the data are:
     + driver_pay: The amount that the driver gets paid.
   
 Issues/Problems with the Data:  
-1. First of all, we've found data entries with wrong dates. For example, there are data entries that are dated on 2021, other months in 2022, or even 2023(the future!), which is not what we want to use.
-2. Some data entries have negative tip/total amount. Some cases have tip amount greater than total amount.
-3. There are trip distances that are extremely large, an example would be 300,000 miles, which clearly doesn't make sense.
+1. First of all, we've found data entries with wrong dates. For example, there are data entries that are dated on 2021, other months in 2022, or even 2023(the future!), which is not what we want to use.  
+2. Some data entries have negative tip/total amount. Some cases have tip amount greater than total amount.  
+3. There are trip distances that are extremely large, an example would be 300,000 miles, which clearly doesn't make sense.  
+4. The trip record data for the date of "2022-06-30" are not complete. Some of them will be included in 2022-July data file, which is not included in our project.  
   
 ## Cleaning / transformation
-
-## Missing value analysis
-
+  
 ```{r message=FALSE, warning=FALSE}
 # Load the required packages
 library(arrow)
@@ -42,35 +42,92 @@ library(dplyr)
 library(naniar)
 library(ggplot2)
 ```
-
-
+  
+We have 3 datasets in total, one dataset for each vehicle type.  
 ```{r}
-#Load Data
-forhire <- read_parquet("../data/fhvhv.parquet")
+yellow <- read_parquet("../data/yellow_tripdata_2022-06.parquet")
+```
+The time scope for our project data is June 2022. However, if we take a close look at the data for each vehicle type, there are some trip record data with wrong datetime. Take the combined version dataframe of yellow taxi as an example:
+```{r}
+library(ggplot2)
+# data cleaning:
+# 1. remove the data that are not in the time frame in June 2022:
+# firstly to see how many data are not in the correct time frame:
+y1 <- yellow %>% mutate(pickup_date = substr(tpep_pickup_datetime,start =1,stop = 7))
+y2 <- y1 %>% count(pickup_date)
+ggplot(y2, aes(x=pickup_date, y=n)) + geom_bar(stat = 'identity') + coord_flip() + geom_text(mapping = aes(label = n), size = 4)+
+  ggtitle("Yellow Taxi: number of obersvations for each month")
+```
+From the graph above, it is clear that there are some invalid data trip records, and we need to limit the pick-up date in Jun 2022 to remove wrong date, such as "2023-04" and "2001-08". 
+
+After that, since our final goal is to combine three vehicle types in to a large complete data set, we need some data transformation as following steps:  
+  
+1. Manually add a "vehicle_type" column: "G" for green taxi trip data, "Y" for yellow taxi trip data, "H" for for-hire vehicle trip data.
+2. For each vehicle data set, rename the column representing the pick up time as "pickup_datetime"; rename the column representing the drop off time as "dropoff_datetime".
+3. Combining the data set of green taxi and yellow taxi as a whole data set called "taxi".
+4. Adding a "total_amount" column in for_hire vehicle data set by adding all other fees together (base_passenger_fare+tolls+bcf+sales_tax+congestion_surcharge+airport_fee), since for_hire vehicle data set does not have the "total_amount" column.
+5. Select eight important columns that are shared by both taxi data set and for-hire vehicle data set: 'pickup_datetime','dropoff_datetime','PULocationID','DOLocationID','trip_distance','tip_amount','total_amount','vehicle_type'.
+6. Combine taxi data set and for-hire vehicle data set as the final complete data set that we will use for plotting and answering the research topic question.
+7. Output the whole vehicle data set as a parquet file, "vehicle.parquet", as a convenient way to import data.
+  
+```{r}
+# filter by date:
+y_combine <-  yellow[yellow$tpep_pickup_datetime >= "2022-06-01 00:00:00" & yellow$tpep_pickup_datetime < "2022-07-01 00:00:00",]
+```
+```{r}
+# Merge data sets of Green taxi:
+green <- read_parquet("../data/green_tripdata_2022-06.parquet")
+# filter by date:
+g_combine <-  green[green$lpep_pickup_datetime >= "2022-06-01 00:00:00" & green$lpep_pickup_datetime < "2022-07-01 00:00:00",]
+```
+```{r}
+# Merge data sets of High Volume FHV:
+fhvhv = read_parquet("../data/fhvhv_tripdata_2022-06.parquet")
+# filter by date:
+forhire <- fhvhv[fhvhv$pickup_datetime >= "2022-06-01 00:00:00" & fhvhv$pickup_datetime < "2022-07-01 00:00:00",]
+
+g_combine$vehicle_type = "G"
+y_combine$vehicle_type = "Y"
 forhire$vehicle_type = "H"
-yellow <- read_parquet("../data/yellow.parquet")
-yellow$vehicle_type = "Y"
-green <- read_parquet("../data/green.parquet")
-green$vehicle_type = "G"
+
+g_combine = rename(g_combine, pickup_datetime = lpep_pickup_datetime)
+g_combine = rename(g_combine, dropoff_datetime = lpep_dropoff_datetime)
+y_combine = rename(y_combine, dropoff_datetime = tpep_dropoff_datetime)
+y_combine = rename(y_combine, pickup_datetime = tpep_pickup_datetime)
 ```
 
 ```{r}
-green = rename(green, pickup_datetime = lpep_pickup_datetime)
-green = rename(green, dropoff_datetime = lpep_dropoff_datetime)
-yellow = rename(yellow, dropoff_datetime = tpep_dropoff_datetime)
-yellow = rename(yellow, pickup_datetime = tpep_pickup_datetime)
+# There is now airport_fee column in green taxi.
+g_combine$airport_fee = NaN
 
-# Green Taxi doesn't have airport_fee column.
-green$airport_fee = NaN
+# There are no ehail_fee and trip_type in yellow taxi.
+y_combine$ehail_fee = NaN
+y_combine$trip_type = NaN
 
-#yellow taxi doesn't have ehail_fee and trip_type column.
-yellow$ehail_fee = NaN
-yellow$trip_type = NaN
+# Combine
+taxi <- rbind(g_combine,y_combine)
 
-# Do the final combination.
-taxi <- rbind(green,yellow)
+# Pick the necessary columns.
+taxi_selected <- taxi[,c('pickup_datetime','dropoff_datetime','PULocationID','DOLocationID','trip_distance','tip_amount','total_amount','vehicle_type')]
+
+forhire_selected <- forhire%>%
+  rename(trip_distance = trip_miles,tip_amount = tips)%>% 
+  mutate(total_amount = base_passenger_fare+tolls+bcf+sales_tax+congestion_surcharge+airport_fee)
+
+forhire_selected <- forhire_selected[,c('pickup_datetime','dropoff_datetime','PULocationID','DOLocationID','trip_distance','tip_amount','total_amount','vehicle_type')]
+
+#Merge two dataset
+vehicles <- rbind(taxi_selected,forhire_selected)
 ```
 
+```{r}
+# Write vehicles into a parquet file
+# write_parquet(vehicles, "vehicles.parquet")
+```
+
+
+## Missing value analysis
+  
 To check and analyze the Missing Data, we have used multiple approaches:  
   
 First, we used is.na() wrapped in colSums()to observe the number of missing values column-wise.
@@ -105,10 +162,11 @@ plot_taxi
 plot_forhire <- ggplot(forhire_summary, aes(x = reorder(variable, -pct_miss), y = pct_miss)) + 
   geom_bar(stat = "identity") + 
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
-  labs(title = "Missing values for firehire_summary", x = "Columns")
+  labs(title = "Missing values for forehire_summary", x = "Columns")
   
 plot_forhire
 ```
+  
 Based on the numerical and visualzed results. We can see that there are only two columns in for-hire vehicles that contains missing values. One is *originating_base_num* (the number of the base that the vehicle is first dispatched) and *on_scene_datetime* (the time that the driver arrived at the pickup location). We have determined that both columns are irrelevant to our research topics and therefore will drop these columns in our future analysis. We also believed that the bar plot on for-hire vehicles has already shown enough information about its missing values.  
   
 On the other hand, for the taxi data, we can see that the columns with the most number of missing values are *ehail_fee*(the fee it costs for passengers to use TLC's app to call their taxi) and *trip_type*(the feature that indicates the trip type of green taxi). We have found that this is because yellow taxi doesn't have an ehail_fee column and all of the values in green taxi's *ehail_fee* column are NA, this could indicate that calling a green taxi doesn't need a fee nowadays. In addition, the *trip_type* is a column that only appears in green taxi, thus all of the yellow taxi trips would have NA values in it. Some other columns with missing values are: *airport_fee*, *congestion_surcharge*, *passenger_count*, *RatecodeID*, *store_and_fwd_flag*, and *payment_type*.   
@@ -118,14 +176,18 @@ Secondly, we used *gg_miss_var()* in the *naiar* package and generated a graph o
 gg_miss_var(taxi)
 gg_miss_var(forhire)
 ```
+  
 Based on the results, we can see that the plots of number of missing values support our findings from the percent missings.  
   
 Finally, we plot an upset plot for taxi dataset. We originally planned to plot one for the forhire vehicles too, but our devices were out-of-memory due to the size of the dataset (over 60 million rows).
 ```{r}
 gg_miss_upset(taxi)
 ```
+  
 Based on this upset plot, we can get the following:  
-1. *ehail_fee* and *trip_type* has the most missing values. Which aligns with our previous findings.
-2. There are over 10 million cases where both *trip_type* and *ehail_fee* are missing.
-3. There are 400 thousand cases where *ehail_fee, trip_type, airport_fee, congestion_surcharge, passenger_count* are all missing. This is an interesting finding to us. In addition to the *trip_type* and *ehail_fee* we discussed previously, *airport_fee* is a column that the green taxi trip data doesn't have. Also, *congestion_surcharge* is a charge placed on passenger when their trips passed through the congestion zone of NYC. One possible reason to explain this missing is that the driver didn't drive through the congestion zone and therefore forgot to record the 0 charge. Lastly, the missing of *passenger_count* could also be an interesting topic to research. If the missing values are mostly from yellow taxi trips, this could be because that the driver didn't remember how many passengers there were or forgot to record it. If the missing values are mostly from green taxi trips, this could be because that the system had a glitch other than the reasons I mentioned for the yellow taxi.
+1. *ehail_fee* and *trip_type* has the most missing values. Which aligns with our previous findings.  
+2. There are over 3 million cases where both *trip_type* and *ehail_fee* are missing.  
+3. There are over 140 thousand cases where *ehail_fee, trip_type, airport_fee, congestion_surcharge, passenger_count* are all missing.  
+  
+This are interesting findings to us. In addition to the *trip_type* and *ehail_fee* we discussed previously, *airport_fee* is a column that the green taxi trip data doesn't have. Also, *congestion_surcharge* is a charge placed on passenger when their trips passed through the congestion zone of NYC. One possible reason to explain this missing is that the driver didn't drive through the congestion zone and therefore forgot to record the 0 charge. Lastly, the missing of *passenger_count* could also be an interesting topic to research. If the missing values are mostly from yellow taxi trips, this could be because that the driver didn't remember how many passengers there were or forgot to record it. If the missing values are mostly from green taxi trips, this could be because that the system had a glitch other than the reasons I mentioned for the yellow taxi.
 

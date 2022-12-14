@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Chapter 3 Data | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis</title>
   <meta name="description" content="Chapter 3 Data | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis" />
-  <meta name="generator" content="bookdown 0.29 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.30 and GitBook 2.6.7" />
 
   <meta property="og:title" content="Chapter 3 Data | New York City Taxi and For-Hire Vehicle Passengers Behavior Analysis" />
   <meta property="og:type" content="book" />
@@ -23,7 +23,7 @@
 <meta name="author" content="Yinqi Wang, Yuyang Zhuo, Jiahao Lai" />
 
 
-<meta name="date" content="2022-10-31" />
+<meta name="date" content="2022-12-14" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -117,12 +117,133 @@
 <h1><span class="header-section-number">Chapter 3</span> Data<a href="data.html#data" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="sources" class="section level2 hasAnchor" number="3.1">
 <h2><span class="header-section-number">3.1</span> Sources<a href="data.html#sources" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The Taxi &amp; Limousine Commission(TLC) of New York City is responsible for collecting the data. The data is collected by the technology providers authorized by TLC under the Taxicab &amp; Livery Passenger Enhancement Programs (TPEP/LPEP). In terms of the options, we can download the monthly trip data for yellow taxi cabs, green taxi cabs, and for-hire vehicles. We decided to use data from all types of vehicles because it would be more helpful for us to learn about the transportation status of NYC from more aspects. We also decided to download the data of June, which was the latest available data at that time.</p>
+<p>Some basic information of the data are:</p>
+<ol style="list-style-type: decimal">
+<li>There are 3 datasets in total, one for yellow taxi cab, one for green taxi cab, and one for for-hire vehicles.</li>
+<li>In total, there are over 200,000 observations for green taxi trips, over 10,000,000 observations for yellow taxi trips, and over 20,000,000 for for-hire vehicle trips. Overall, we have over 30 million records.</li>
+<li>For the yellow and green taxi cab trip data, some important variables are:
+<ul>
+<li>tpep_pickup_datetime: The pickup time (when the meter was engaged).</li>
+<li>tpep_dropoff_datetime: The dropoff time (when the meter was disengaged).</li>
+<li>Passenger_count: Number of passengers in the trip.</li>
+<li>Trip_distance: Trip distance, in miles.</li>
+<li>PULocationID/DOLocationID: TLC Taxi Zone when pickup/TLC Taxi Zone when dropoff.</li>
+<li>RateCodeID: The rate code at the end of the trip. This helps us identify whether the vehicle went to the airport or not.<br />
+</li>
+<li>Tip_amount: The amount of tip the passenger paid.<br />
+</li>
+<li>Total_amount: The total amount charged to the passenger.</li>
+<li>congestion_charge: The charge of passing through NYC congestion zone.<br />
+</li>
+</ul></li>
+<li>For the for-hire vehicle trip data, some important variables are:
+<ul>
+<li>pickup_datetime/dropoff_datetime: The date and time of the trip pickup/dropoff</li>
+<li>PULocationID/DOLocationID: TLC Taxi zone where the trip begins/ends.</li>
+<li>trip_miles: The trip distance in miles.</li>
+<li>trip_time: The time elapsed of the trip, in seconds.</li>
+<li>congestion_charge: The charge of passing through NYC congestion zone.</li>
+<li>tips: same as yellow/green taxi trips.</li>
+<li>driver_pay: The amount that the driver gets paid.</li>
+</ul></li>
+</ol>
+<p>Issues/Problems with the Data:<br />
+1. First of all, we’ve found data entries with wrong dates. For example, there are data entries that are dated on 2021, other months in 2022, or even 2023(the future!), which is not what we want to use.<br />
+2. Some data entries have negative tip/total amount. Some cases have tip amount greater than total amount.<br />
+3. There are trip distances that are extremely large, an example would be 300,000 miles, which clearly doesn’t make sense.<br />
+4. The trip record data for the date of “2022-06-30” are not complete. Some of them will be included in 2022-July data file, which is not included in our project.</p>
 </div>
 <div id="cleaning-transformation" class="section level2 hasAnchor" number="3.2">
 <h2><span class="header-section-number">3.2</span> Cleaning / transformation<a href="data.html#cleaning-transformation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We have 3 datasets in total, one dataset for each vehicle type.</p>
+<p>The time scope for our project data is June 2022. However, if we take a close look at the data for each vehicle type, there are some trip record data with wrong datetime. Take the combined version dataframe of yellow taxi as an example:
+<img src="finalproj_files/figure-html/unnamed-chunk-6-1.png" width="672" />
+From the graph above, it is clear that there are some invalid data trip records, and we need to limit the pick-up date in Jun 2022 to remove wrong date, such as “2023-04” and “2001-08”.</p>
+<p>After that, since our final goal is to combine three vehicle types in to a large complete data set, we need some data transformation as following steps:</p>
+<ol style="list-style-type: decimal">
+<li>Manually add a “vehicle_type” column: “G” for green taxi trip data, “Y” for yellow taxi trip data, “H” for for-hire vehicle trip data.</li>
+<li>For each vehicle data set, rename the column representing the pick up time as “pickup_datetime”; rename the column representing the drop off time as “dropoff_datetime”.</li>
+<li>Combining the data set of green taxi and yellow taxi as a whole data set called “taxi”.</li>
+<li>Adding a “total_amount” column in for_hire vehicle data set by adding all other fees together (base_passenger_fare+tolls+bcf+sales_tax+congestion_surcharge+airport_fee), since for_hire vehicle data set does not have the “total_amount” column.</li>
+<li>Select eight important columns that are shared by both taxi data set and for-hire vehicle data set: ‘pickup_datetime’,‘dropoff_datetime’,‘PULocationID’,‘DOLocationID’,‘trip_distance’,‘tip_amount’,‘total_amount’,‘vehicle_type’.</li>
+<li>Combine taxi data set and for-hire vehicle data set as the final complete data set that we will use for plotting and answering the research topic question.</li>
+<li>Output the whole vehicle data set as a parquet file, “vehicle.parquet”, as a convenient way to import data.</li>
+</ol>
 </div>
 <div id="missing-value-analysis" class="section level2 hasAnchor" number="3.3">
 <h2><span class="header-section-number">3.3</span> Missing value analysis<a href="data.html#missing-value-analysis" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>To check and analyze the Missing Data, we have used multiple approaches:</p>
+<p>First, we used is.na() wrapped in colSums()to observe the number of missing values column-wise.</p>
+<pre><code>##             ehail_fee             trip_type           airport_fee    store_and_fwd_flag 
+##               3627880               3563502                205997                141618 
+##            RatecodeID       passenger_count  congestion_surcharge          payment_type 
+##                141618                141618                141618                  9276 
+##              VendorID       pickup_datetime      dropoff_datetime          PULocationID 
+##                     0                     0                     0                     0 
+##          DOLocationID         trip_distance           fare_amount                 extra 
+##                     0                     0                     0                     0 
+##               mta_tax            tip_amount          tolls_amount improvement_surcharge 
+##                     0                     0                     0                     0 
+##          total_amount          vehicle_type 
+##                     0                     0</code></pre>
+<pre><code>## originating_base_num    on_scene_datetime    hvfhs_license_num dispatching_base_num 
+##              4713868              4713865                    0                    0 
+##     request_datetime      pickup_datetime     dropoff_datetime         PULocationID 
+##                    0                    0                    0                    0 
+##         DOLocationID           trip_miles            trip_time  base_passenger_fare 
+##                    0                    0                    0                    0 
+##                tolls                  bcf            sales_tax congestion_surcharge 
+##                    0                    0                    0                    0 
+##          airport_fee                 tips           driver_pay  shared_request_flag 
+##                    0                    0                    0                    0 
+##    shared_match_flag   access_a_ride_flag     wav_request_flag       wav_match_flag 
+##                    0                    0                    0                    0 
+##         vehicle_type 
+##                    0</code></pre>
+<p>Next, we used a package <em>naniar</em> to produce a summary of the datasets’ missing value counts and percent missing.</p>
+<pre><code>## # A tibble: 22 × 3
+##    variable              n_miss pct_miss
+##    &lt;chr&gt;                  &lt;int&gt;    &lt;dbl&gt;
+##  1 ehail_fee            3627880  100    
+##  2 trip_type            3563502   98.2  
+##  3 airport_fee           205997    5.68 
+##  4 store_and_fwd_flag    141618    3.90 
+##  5 RatecodeID            141618    3.90 
+##  6 passenger_count       141618    3.90 
+##  7 congestion_surcharge  141618    3.90 
+##  8 payment_type            9276    0.256
+##  9 VendorID                   0    0    
+## 10 pickup_datetime            0    0    
+## # … with 12 more rows</code></pre>
+<pre><code>## # A tibble: 25 × 3
+##    variable              n_miss pct_miss
+##    &lt;chr&gt;                  &lt;int&gt;    &lt;dbl&gt;
+##  1 originating_base_num 4713868     26.6
+##  2 on_scene_datetime    4713865     26.6
+##  3 hvfhs_license_num          0      0  
+##  4 dispatching_base_num       0      0  
+##  5 request_datetime           0      0  
+##  6 pickup_datetime            0      0  
+##  7 dropoff_datetime           0      0  
+##  8 PULocationID               0      0  
+##  9 DOLocationID               0      0  
+## 10 trip_miles                 0      0  
+## # … with 15 more rows</code></pre>
+<p>For visualizations, we first made two bar plots (one for each dataset) to visualize the percent of missing values in each column.
+<img src="finalproj_files/figure-html/unnamed-chunk-15-1.png" width="672" /><img src="finalproj_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<p>Based on the numerical and visualzed results. We can see that there are only two columns in for-hire vehicles that contains missing values. One is <em>originating_base_num</em> (the number of the base that the vehicle is first dispatched) and <em>on_scene_datetime</em> (the time that the driver arrived at the pickup location). We have determined that both columns are irrelevant to our research topics and therefore will drop these columns in our future analysis. We also believed that the bar plot on for-hire vehicles has already shown enough information about its missing values.</p>
+<p>On the other hand, for the taxi data, we can see that the columns with the most number of missing values are <em>ehail_fee</em>(the fee it costs for passengers to use TLC’s app to call their taxi) and <em>trip_type</em>(the feature that indicates the trip type of green taxi). We have found that this is because yellow taxi doesn’t have an ehail_fee column and all of the values in green taxi’s <em>ehail_fee</em> column are NA, this could indicate that calling a green taxi doesn’t need a fee nowadays. In addition, the <em>trip_type</em> is a column that only appears in green taxi, thus all of the yellow taxi trips would have NA values in it. Some other columns with missing values are: <em>airport_fee</em>, <em>congestion_surcharge</em>, <em>passenger_count</em>, <em>RatecodeID</em>, <em>store_and_fwd_flag</em>, and <em>payment_type</em>.</p>
+<p>Secondly, we used <em>gg_miss_var()</em> in the <em>naiar</em> package and generated a graph of missingness in variables for each dataset.
+<img src="finalproj_files/figure-html/unnamed-chunk-16-1.png" width="672" /><img src="finalproj_files/figure-html/unnamed-chunk-16-2.png" width="672" /></p>
+<p>Based on the results, we can see that the plots of number of missing values support our findings from the percent missings.</p>
+<p>Finally, we plot an upset plot for taxi dataset. We originally planned to plot one for the forhire vehicles too, but our devices were out-of-memory due to the size of the dataset (over 60 million rows).
+<img src="finalproj_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Based on this upset plot, we can get the following:<br />
+1. <em>ehail_fee</em> and <em>trip_type</em> has the most missing values. Which aligns with our previous findings.<br />
+2. There are over 3 million cases where both <em>trip_type</em> and <em>ehail_fee</em> are missing.<br />
+3. There are over 140 thousand cases where <em>ehail_fee, trip_type, airport_fee, congestion_surcharge, passenger_count</em> are all missing.</p>
+<p>This are interesting findings to us. In addition to the <em>trip_type</em> and <em>ehail_fee</em> we discussed previously, <em>airport_fee</em> is a column that the green taxi trip data doesn’t have. Also, <em>congestion_surcharge</em> is a charge placed on passenger when their trips passed through the congestion zone of NYC. One possible reason to explain this missing is that the driver didn’t drive through the congestion zone and therefore forgot to record the 0 charge. Lastly, the missing of <em>passenger_count</em> could also be an interesting topic to research. If the missing values are mostly from yellow taxi trips, this could be because that the driver didn’t remember how many passengers there were or forgot to record it. If the missing values are mostly from green taxi trips, this could be because that the system had a glitch other than the reasons I mentioned for the yellow taxi.</p>
 
 </div>
 </div>
