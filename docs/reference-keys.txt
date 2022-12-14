@@ -12,5 +12,11 @@ sources
 cleaning-transformation
 missing-value-analysis
 results
+what-time-of-the-day-has-the-highest-demand
+which-areas-are-popular-destinations-on-weekends
+what-is-the-most-likely-time-period-for-a-long-distance-ride
+what-are-the-areas-that-give-a-high-tip-amount-30---50
+for-each-type-of-vehicle-which-airport-do-their-passengers-usually-prefer-to-go-to
+for-those-passengers-who-arrived-at-the-airports-what-type-of-vehicle-they-preferred-to-take
 interactive-component
 conclusion

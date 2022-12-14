@@ -1,1 +1,378 @@
 # Results
+  
+In this section, we are going to answer our research questions through visualizations.
+  
+```{r message=FALSE}
+# Package loading and file reading.
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(arrow)
+library(naniar)
+library(lubridate)
+library(ggridges)
+```
+
+```{r}
+# Read the taxi_zone_lookup data
+taxi_zone <- read_csv("../data/taxi+_zone_lookup.csv")
+
+vehicles <- read_parquet("../data/vehicles.parquet")
+vehicles$pick_hour <- as.integer(format(vehicles$pickup_datetime,format = "%H"))
+vehicles$dropoff_hour <- as.integer(format(vehicles$dropoff_datetime,format = "%H"))
+vehicles$month <- format(vehicles$pickup_datetime,format = "%B")
+```
+
+
+## What time of the day has the highest demand?
+```{r}
+library(ggplot2)
+ggplot(data = vehicles,aes(x = pick_hour))+
+  geom_histogram(stat="count",
+                 binwidth = 0.1,
+                 fill="lightblue",
+                 col = "black")+
+  ggtitle("The Ride Demand during a Day") + 
+  geom_density(aes(y =after_stat(count)),
+               bw=1)+
+  theme_bw()
+```
+  
+Based on the histogram we plot, we can see that 2 p.m. is the hour that has the highest demand. This result is different from what we expected because 2 p.m. is a time when people are usually at work/school. In general, the demand in the afternoon is higher than the demand in the morning. 
+  
+Next, we created histogram for each vehicle type and see their ride count distributions.
+```{r}
+ggplot(data = vehicles,aes(x = pick_hour))+
+  geom_histogram(stat="count",
+                 binwidth = 0.1,
+                 fill="lightblue",
+                 col = "black")+
+  geom_density(aes(y =after_stat(count)),
+               bw=1,
+               color = "red",na.rm = TRUE)+
+  ggtitle("The Ride Demands at Each Hour of The Day for Each  Type") +
+  facet_wrap(~vehicle_type, scales = "free_y", ncol=1)
+```
+  
+From the histograms and density curves, we can see that all vehicle types have their peak demand time at around 2 p.m. This is a very interesting result for future explorations. Is there a problem in the data? Or is it a weekday/weekend travel difference? Maybe people are travelling around 2 p.m. for tourism or entertainment? These are some future directions we can work on.  
+  
+We have then decided to see the ride demands for the weekdays, and compare it with the ride demands on weekends. Here is the visualization we made:
+```{r}
+vehicles$weekday <- weekdays(vehicles$dropoff_datetime)
+vehicles$day <- wday(vehicles$dropoff_datetime, week_start=1)
+
+v <- vehicles%>%mutate(hour = pick_hour + (as.integer(substr(pickup_datetime,start =15,stop = 16)) /60))
+```
+  
+```{r warning=FALSE}
+# quantile ridgeline plot
+
+p <- ggplot(data=v, aes(x = hour, y = reorder(weekday,desc(day)), fill=stat(quantile))) + 
+  stat_density_ridges(quantile_lines = FALSE,
+                      calc_ecdf = TRUE,
+                      geom = "density_ridges_gradient") +
+  scale_fill_brewer(name = "") +
+  labs(
+    x = "Hour",
+    y = "Day of Week",
+    title = "Hourly demand from Monday to Sunday"
+  ) 
+p
+```
+  
+From the quantile ridgeline plot we made, we can see that there is a peak in the morning during the weekdays. Also, there is a peak at night during the weekdays at around 7 p.m. each day. These findings matched our expectations, as the ride demand should be high when people go to work and get off from work. In terms of the highest demand of the day, we noticed that all of the days had their highest demand happened at around 2 p.m. except for Saturday (at around 7 p.m.). While this finding matches what we found previously, it still didn't match our expectations. Having the highest demand at 2 p.m. didn't really make sense to us. On the other hand, we found a small peak at around 0 a.m. on Saturday and Sunday. This could be a reflection of the colorful night life at NYC.  
+  
+## Which areas are popular destinations on weekends? 
+
+```{r}
+# Select the trips on the weekend.
+vehicles_weekend <- vehicles%>%
+  filter(weekday == "Saturday" | weekday == "Sunday")
+vehicles_weekend$DOLocationID <- as.character(vehicles_weekend$DOLocationID)
+# Count the number of dropoffs in each area.
+temp1 <- vehicles_weekend %>%
+  mutate(category = DOLocationID)%>%
+  group_by(category,weekday)%>%
+  count()%>%
+  ungroup()
+
+temp2 <- vehicles_weekend %>%
+  mutate(LocationID = DOLocationID)%>%
+  group_by(LocationID)%>%
+  count()%>%
+  ungroup()
+
+temp1 <- temp1[order(-temp1$n),]
+temp1 <- rename(temp1, LocationID = category)
+temp3 <- temp1[1:21,]
+
+# data transformation
+temp4 <- filter(temp1,LocationID %in% temp3$LocationID)
+temp4 <- merge(x=temp4, y=taxi_zone, by="LocationID")
+temp4 <-  temp4[!(is.na(temp4$Zone)),]
+
+# Cleverland plot ordered
+ggplot(temp4, aes(x = n, y = fct_reorder2(Zone,weekday == "Saturday", n, .desc = FALSE))) +
+  geom_point(aes(color = weekday))+
+  geom_line(aes(group=Zone))+
+  xlab("Number of Rides")+
+  ylab("Dropoff Location")+
+  ggtitle("Weekend Drop Off Location Statistics")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+  
+We first made a Cleveland dot plot so that we can compare the ride numbers each area have over the weekend. We selected the top 20 destinations with the highest total weekend ride numbers. We can clearly see a pattern in these destinations. For example, places like LaGuardia Airport and JFK Airport are popular destinations over the weekend either for a vacation/business trip (June is a month where summer vacation takes place for students, so this could be a big factor), Penn Station could also be one, as people will travel through railroad. Also, places like East Village and Time Square are famous for night life and entertainments(shopping, for example). Places like Williamsburg and Clinton(Hell's Kitchen) are places with high incomes, so people's life there are probably more colorful compared to others, and these places could attract visitors, too. Overall, the top 20 popular weekend ride destinations are all with clear characteristics, and most of them are more or less associated with entertainment and traveling.  
+  
+To compare and contrast, we also made a Cleveland dot plot for trips during weekdays.
+```{r}
+# Select the trips during weekdays.
+vehicles_weekday <- vehicles%>%
+  filter(weekday != "Saturday" & weekday != "Sunday")
+vehicles_weekday$DOLocationID <- as.character(vehicles_weekday$DOLocationID)
+# Count the number of dropoffs in every places.
+temp1 <- vehicles_weekday %>%
+  mutate(category = DOLocationID)%>%
+  group_by(category,weekday)%>%
+  count()%>%
+  ungroup()
+
+temp2 <- vehicles_weekday %>%
+  mutate(LocationID = DOLocationID)%>%
+  group_by(LocationID)%>%
+  count()%>%
+  ungroup()
+
+temp1 <- temp1[order(-temp1$n),]
+temp1 <- rename(temp1, LocationID = category)
+temp3 <- temp1[1:75,]
+
+# data transformation
+temp4 <- filter(temp1,LocationID %in% temp3$LocationID)
+temp4 <- merge(x=temp4, y=taxi_zone, by="LocationID")
+temp4 <-  temp4[!(is.na(temp4$Zone)),]
+#Cleverland plot ordered
+ggplot(temp4, aes(x = n, y = fct_reorder2(Zone,weekday == "Monday", n, .desc = FALSE))) +
+  geom_point(aes(color = weekday))+
+  geom_line(aes(group=Zone))+
+  xlab("Number of Rides")+
+  ylab("Dropoff Location")+
+  ggtitle("Weekday Drop Off Location Statistics")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+  
+Again, we selected the top 20 destinations in terms of their total number of weekday rides, and we've found significant overlaps with the previous plot (many destinations showed up again). We can see that places like LaGuardia Airport and JFK Airport are ranked top, which showed NYC's importance in airline transportation. This can also imply that people in NYC are having more volatile schedules/lifestyle. On the other hand, places like Times Square had their ranking increased, which could be an effect of working class passengers and summer travelers. Places like East Village still had a strong performance, this could indicate the strength and profoundness of the night life tradition in NYC.  
+  
+```{r}
+# heatmap:
+# For top 20 popular weekend destinations, we want to see the ride trip frequencies in different hour (only on weekend)
+
+# get the number of rides group by location, weekday and pick_hour
+temp3 <- vehicles_weekend %>%
+  mutate(LocationID = DOLocationID)%>%
+  group_by(LocationID,weekday,dropoff_hour)%>%
+  count()%>%
+  ungroup()
+# retrieve the top 20 popular destinations on weekend
+temp1 <- vehicles_weekend %>%
+  mutate(LocationID = DOLocationID)%>%
+  group_by(LocationID)%>%
+  count()%>%
+  ungroup()
+temp1 <- temp1[order(-temp1$n),]
+temp4 <- temp1[1:21,]
+
+# data transformation
+temp5 <- filter(temp3,LocationID %in% temp4$LocationID)
+temp5 <- merge(x=temp5, y=taxi_zone, by="LocationID")
+temp5 <-  temp5[!(is.na(temp5$Zone)),]
+
+#final data to plot heatmap
+temp6 <- temp5%>%
+  group_by(dropoff_hour, Zone)%>%
+  summarise(n = sum(n))
+
+library(highcharter)
+
+# set the formap of tooptip, 显示x y: value
+fntltp <- JS("function(){
+  return this.series.xAxis.categories[this.point.x] + ' ' +  
+  this.series.yAxis.categories[this.point.y] + ':<br>' +
+  Highcharts.numberFormat(this.point.value, 2);
+}")
+
+temp6$dropoff_hour <- as.factor(temp6$dropoff_hour)
+dropoff_hour<- levels(temp6$dropoff_hour)
+
+highchart() %>%
+  hc_title(text = "Top-20 popular weekend destinations and hourly ride demand",align="center")%>%
+  hc_xAxis(categories = dropoff_hour) %>%
+  hc_yAxis(categories = temp6$Zone, reversed = TRUE)%>%
+  hc_xAxis(title = list(text = "Dropoff Hour"),categories = dropoff_hour) %>%
+  hc_yAxis(title = list(text = "Top 20 popular weekend destinations"),categories = temp6$Zone, reversed = TRUE)%>%
+  hc_colorAxis(min = 0,minColor = "#FFFFFF", max=10000) %>%
+  hc_legend(align = "right",layout = "vertical",
+            margin = 0,verticalAlign = "top",
+            y = 30,symbolHeight = 200) %>%
+  hc_tooltip(formatter = fntltp) %>%
+  hc_add_series(data = temp6,type = "heatmap",
+                hcaes(x = dropoff_hour,y = Zone,value = n),
+                dataLabels = list(enabled = FALSE))
+```
+  
+We also tried to analyze the top 20 destinations' ride information from the aspect of dropoff hour. As we can see from the heatmap, the JFK and LaGuardia airport has their peaks between 1 a.m. and 2 a.m., and remains a high number of dropoffs in the morning. This could imply that NYC travelers are more willing to take red-eye flights (might be because of cheaper prices). On the other hand, East Village has high dropoff rides starting at late afternoon, which could also be an indication of its popularity as a place for night life. Overall, the heatmap supports our previous analysis on this research question.  
+  
+## What is the most likely time period for a long distance ride?
+  
+First, we have categorized the trip distances. If a trip's distance is above 10 miles, we call it a long distance ride. If a trip's distance is above 5 but lower than 10, we call it a medium distance ride. If a trip's distance is above 2 but lower than 5, we call it a short distance ride. Any rides that are below 2 miles would be categorized as very short ride.  
+```{r}
+temp1 <- vehicles
+
+temp1 <- temp1%>%
+  mutate(group = case_when(
+                           trip_distance > 10 ~ "Long",
+                           trip_distance > 5 ~ "Medium",
+                           trip_distance> 2 ~ "short",
+                           TRUE ~ "Very short"))
+
+temp2 <- temp1%>%
+  group_by(group,pick_hour)%>%
+  count()%>%
+  ungroup()
+
+temp3<- temp1%>%
+  group_by(pick_hour)%>%
+  count()%>%
+  ungroup()%>%
+  select(pick_hour,n)
+
+temp3 <-rename(temp3, countPerHour = n)
+
+temp4 <- merge(temp2,temp3,by='pick_hour')
+
+temp4<- temp4%>%
+  mutate(percent = n/countPerHour)%>%
+  select(pick_hour,group,percent)
+
+library(tidyr)
+temp5 <- temp4 %>% pivot_wider(names_from ='pick_hour',
+                            values_from = 'percent')
+
+# library(GGally)
+# ggparcoord(temp5,columns = 2:25,groupColumn = 1)+
+#  theme_classic()+
+#  xlab("Pickup Hour")
+
+ggplot(temp4, aes(x=pick_hour, y=percent, group=group, color=group)) +
+  geom_line() +
+  scale_color_viridis(option = "C", discrete = TRUE) +
+  ggtitle("The porportion of each type of trip over time") +
+  ylab("Proportions")
+```
+  
+As we can see from the graph, the proportion of long distance ride is the highest at 1 a.m. There are lots of ways to interpret this finding. First of all, this could be that people are returning to their places from an airport (the result of the heatmap for last research question could be an indication, and people usually live more than 10 miles away from an airport), or they are heading to a bar/night life place of their choice. On the other hand, we can see that the proportion difference between long trip and short trip widened after 1 a.m. until around 10 p.m. This pattern is reasonable to us because people tend to take shorter trips during the day to go to work, to eat, or for some close-by entertainments. It would not make much sense if they are traveling to a place more than 10 miles away to do those activities.  
+
+## What are the areas that give a high tip amount (30% - 50%)?
+  
+To research on this topic, we further cleaned the data so that the negative tip amounts were eliminated, and we get the tip amount that is between 30% and 50% (we categorize this as high tip amount). Next, we grouped the data based on the zones they belong to. Next, we ranked the zones based on the cases of high tip, and created a boxplot for each zone.
+```{r}
+# clean tip data: 
+# remove the invalid observations e.g: 
+#   1. negative tip amount or negative total amount
+#   2. tip_amount >= total_amount
+vehicles_tip <- vehicles%>%
+  filter(tip_amount>0 & total_amount>0 & total_amount > tip_amount)
+# select observations with "high-tips" (>50%)
+hightip <- vehicles_tip[vehicles_tip$tip_amount > (vehicles_tip$total_amount * 0.3) & vehicles_tip$tip_amount <= (vehicles_tip$total_amount * 0.5) ,]
+hightip$tip_percent <- (hightip$tip_amount / hightip$total_amount)
+```
+```{r}
+tip_result <- hightip %>% count(PULocationID)
+tip_result = rename(tip_result, LocationID = PULocationID)
+
+tip_zone <- merge(x=tip_result, y=taxi_zone,by="LocationID")
+tip_zone <-  tip_zone[!(is.na(tip_zone$Zone)),]
+tip_zone <- tip_zone[order(-tip_zone$n),]
+# only choose top 20 area
+tip_result <- tip_zone[1:20,]
+```
+  
+```{r}
+hightip = rename(hightip, LocationID = DOLocationID)
+
+tip_df <- merge(x=hightip, y=tip_result,by="LocationID")
+
+# only choose the top area that give high tips:
+```
+  
+```{r}
+library(forcats)
+ggplot(tip_df, aes(x = fct_reorder(Zone,-tip_percent), y=tip_percent)) +
+  geom_boxplot() +
+  ggtitle("Tip percentage in different area") +
+  labs(y="Tip Percentage", x="Area") + 
+  coord_flip()
+```
+  
+Based on the plot we have, we can see that the top 20 zones with the highest high tip cases are mostly from places like Brooklyn, Queens, and Manhattan. The zones shown in this graph didn't form a pattern. For example, the area that ranked the first was Williamsburg, a neighborhood with median income of almost 100,000. And the cost of living in those neighborhoods are generally quite high. This could be an indication that neighborhood with better quality will give out high tips. However, we won't make this as a generalized conclusion just yet. This is because there are many factors that contributes to a high tip (trip quality, for example), and people who can afford a higher cost of living won't necessarily give out high tips.  
+  
+Furthermore, we can also see a lot of "old faces". For example, Time Square and East Village appear a lot in previous visualizations such as the top 20 destinations with highest ride demands during weekends and during weekdays. Time Square and East Village are places where people come for entertainments, and thus people are more willing to spend, this could be a potential reason of seeing such overlap between research questions.  
+  
+## For each type of vehicle, which airport do their passengers usually prefer to go to? 
+  
+First of all, we filtered out the trips where the destination is an airport. Then, we compute the airport proportions for each vehicle type.
+```{r}
+vehicle_airport_PU <- vehicles %>%
+  filter(PULocationID == 1 | PULocationID == 132 | PULocationID == 138) %>%
+  rename(LocationID = PULocationID)
+
+vehicle_airport_DO <- vehicles %>%
+  filter(DOLocationID == 1 | DOLocationID == 132 | DOLocationID == 138) %>%
+  rename(LocationID = DOLocationID)
+
+vehicle_airport_PU <- merge(vehicle_airport_PU, taxi_zone, by="LocationID")
+vehicle_airport_DO <- merge(vehicle_airport_DO, taxi_zone, by="LocationID")
+```
+
+```{r}
+agg_tbl <- vehicle_airport_DO %>% group_by(vehicle_type, Zone) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+tbl_pct <- agg_tbl %>% group_by(vehicle_type) %>%
+  mutate(percent = total_count/sum(total_count))
+tbl_pct
+```
+
+```{r}
+library(viridis)
+ggplot(tbl_pct, aes(fill=Zone, y=percent, x=vehicle_type)) + 
+    geom_bar(position="stack", stat="identity", width = 0.5) +
+    scale_fill_viridis(discrete=TRUE) +
+    ggtitle("Destination Airports for each Vehicle Type")
+```
+  
+Based on this visualization, we can see that JFK and LaGuardia are about equally popular destination for for-hire vehicles and yellow cab taxi. However, LaGuardia is the more popular option for green cab taxi riders. Newark is the one with lowest proportion for all vehicle types, this could infer that, since Newark is at New Jersey, people are generally less likely to buy a flight ticket at an out-of-state airport. We also thought from another direction and realized that this information could also indicates that the number of airplane travelers is so large that the two airports at NYC could not digest. Thus, there were people who ended up choosing Newark as their departure. We have found an interesting future direction through this research question. 
+  
+In addition, it is surprising to see that LaGuardia has almost the same proportion for for-hire and yellow vehicles. Since LaGuardia mostly have flights that goes to East Coast cities, could that indicates that the NYC residents are more willing to travel around the East Coast?
+  
+## For those passengers who arrived at the airports, what type of vehicle they preferred to take?
+  
+First, we calculate the proportions of vehicle type at each airport (pickup)
+```{r}
+agg_tbl_PU <- vehicle_airport_PU %>% group_by(Zone, vehicle_type) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+tbl_pct_PU <- agg_tbl_PU %>% group_by(Zone) %>%
+  mutate(percent = total_count/sum(total_count))
+tbl_pct_PU
+```
+
+Then, we generate the visualization.
+```{r}
+library(RColorBrewer)
+ggplot(tbl_pct_PU, aes(fill=vehicle_type, y=percent, x=Zone)) + 
+    geom_bar(position="dodge", stat="identity") + 
+    scale_fill_brewer(palette = "Accent") +
+    ggtitle("Ride Choice of the Airport Arrivals")
+```
+  
+This graph is quite interesting. As we can see, the for-hire vehicles is the most popular ride choice for arrivals at JFK and LaGuardia. However, we can see that the yellow taxi cab consists almost 100% of the ride choices the arrivals made. The results on JFK and LaGuardia made sense, but Newark's result really surprised us. Our takeaway and interpretation for the result at Newark is that, since Newark is an airport at New Jersey, it is out of the active zone of the green cabs, and the for-hire drivers there would mostly be New Jersey locals. As such, they would be less willing to take NYC passengers because of the far distances (in this case, no for-hire rides trips were recorded). On the other hand, Yellow Taxi Cab will for sure go to the NYC, so taking it would potentially save more waiting time. Thus, this could be a potential explanation of such a high proportion of yellow cabs at Newark Airport.

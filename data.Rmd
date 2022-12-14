@@ -116,13 +116,12 @@ forhire_selected <- forhire%>%
 
 forhire_selected <- forhire_selected[,c('pickup_datetime','dropoff_datetime','PULocationID','DOLocationID','trip_distance','tip_amount','total_amount','vehicle_type')]
 
-#Merge two dataset
-vehicles <- rbind(taxi_selected,forhire_selected)
+# Next, merge two datasets.
 ```
 
 ```{r}
-# Write vehicles into a parquet file
-# write_parquet(vehicles, "vehicles.parquet")
+# Write vehicles(The merged two dataset) into a parquet file
+# write_parquet(rbind(taxi_selected,forhire_selected), "vehicles.parquet")
 ```
 
 
