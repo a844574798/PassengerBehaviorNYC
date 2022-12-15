@@ -1,13 +1,13 @@
 # Conclusion
   
 **Takeaways of explorations:**  
-The takeaways of our explorations are:
+Through exploratory data analysis and visualizations. We've learned more about the taxi and for-hire vehicle industry, and how studying this industry can help us learn more about NYC. It was excited to learn the destinations that appeared in our analysis and the key characteristics of NYC including transportation, daily lives, airline traveling, and night life. Through this project, we not only learned about the NYC passengers' behavior but also had a chance to get to know about the neighborhoods in NYC, and the life of NYC taxi/for-hire riders. 
   
 **Limitations:**  
-Of course, there are certain limitations of this project. First of all, the dataset is so large that our computer devices had a hard time dealing with it. It took us a significant amount of time to do the data cleaning, wrangling, and transformation. It also made it extremely harder for us to do operations such as mapping and negatively impacted our time-efficiency.  
+Of course, there are certain limitations of this project. First of all, the dataset is so large that our computer devices had a hard time dealing with it. It took us a significant amount of time to do the data cleaning, wrangling, and transformation. It also made it extremely harder for us to do operations such as mapping and negatively impacted our time-efficiency. Initially, we wanted to do the analysis for 3 months' data. However, none of our devices can handle this task, and we had to reduce the number of dataset we were going to analyze.  
   
-**Future Directions:**
+**Future Directions:**  
 In terms of future directions, our team would work on putting the information on a map of NYC and see the ride data for every county or even every precinct. We will also try some more research topics that are larger in scale. On the other hand, we will further improve our exploratory analysis skills and improve the visualizations we have on hand. and we will discover other visualization options that could potentially visualize our research topics better.  
   
-**Lesson Learned:**
+**Lesson Learned:**  
 We have learned a lot from this project. This project not only helped us use the skills we learned in class to get things done, but also made us care more about the issues around us. We have never thought that studying ride-share data could help us understand our community better. We have also learned from the obstacles/limitations occurred during the project. For example, there are some occasions where we noticed that we need more data wrangling and such we went back and do the change, this was time-consuming, especially when working with such a large dataset, we should examine our data more thoroughly in future analysis. On the other hand, we can also consider applying proper sampling methods to the dataset to make our devices run faster (stratified sampling, for example). Finally, we believe that we should think more carefully next time in terms of the amount of data we would like to work on, as our devices have their capacities.

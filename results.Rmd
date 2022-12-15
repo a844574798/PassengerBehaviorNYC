@@ -11,6 +11,7 @@ library(arrow)
 library(naniar)
 library(lubridate)
 library(ggridges)
+library(viridis)
 ```
 
 ```{r}
